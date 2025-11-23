@@ -1,8 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import '../../styles/global.css';
 
 const Logo = ({ showText = true, className = '', size = 'default' }) => {
-
   const logoContent = (
     <>
       <svg
@@ -14,8 +13,8 @@ const Logo = ({ showText = true, className = '', size = 'default' }) => {
       >
         <defs>
           <linearGradient id="brainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{ stopColor: '#6366f1', stopOpacity: 1 }} />
-            <stop offset="100%" style={{ stopColor: '#8b5cf6', stopOpacity: 1 }} />
+            <stop offset="0%" style={{ stopColor: '#171717', stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopColor: '#404040', stopOpacity: 1 }} />
           </linearGradient>
           <linearGradient id="lightGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
@@ -27,7 +26,7 @@ const Logo = ({ showText = true, className = '', size = 'default' }) => {
         <path
           d="M100 30 C85 30, 70 35, 60 45 C50 55, 45 70, 45 85 C45 100, 50 115, 60 125 C70 135, 85 140, 100 140 C115 140, 130 135, 140 125 C150 115, 155 100, 155 85 C155 70, 150 55, 140 45 C130 35, 115 30, 100 30 Z"
           fill="url(#brainGradient)"
-          stroke="#4f46e5"
+          stroke="#000000"
           strokeWidth="2"
         />
 
@@ -61,12 +60,12 @@ const Logo = ({ showText = true, className = '', size = 'default' }) => {
         />
         <path
           d="M50 100 L52 105 L57 103 L52 108 L50 113 L48 108 L43 103 L48 105 Z"
-          fill="#60a5fa"
+          fill="#a3a3a3"
           opacity="0.7"
         />
         <path
           d="M150 100 L152 105 L157 103 L152 108 L150 113 L148 108 L143 103 L148 105 Z"
-          fill="#60a5fa"
+          fill="#a3a3a3"
           opacity="0.7"
         />
       </svg>
@@ -74,9 +73,7 @@ const Logo = ({ showText = true, className = '', size = 'default' }) => {
     </>
   );
 
-
   return <div className={`logo ${className}`}>{logoContent}</div>;
 };
 
 export default Logo;
-

@@ -59,10 +59,10 @@ const AppLayout = () => {
             )}
             {!isLoading && !isAuthenticated && (
               <>
-                <NavLink to="/auth/login" className="ghost-button ghost-button--light app-shell__action-btn">
+                <NavLink to="/auth/login" className="app-shell__nav-link app-shell__nav-link--highlight">
                   Войти
                 </NavLink>
-                <NavLink to="/auth/register" className="button button--compact app-shell__action-btn">
+                <NavLink to="/auth/register" className="app-shell__nav-link app-shell__nav-link--highlight">
                   Регистрация
                 </NavLink>
               </>
@@ -77,6 +77,7 @@ const AppLayout = () => {
         <div className="footer__columns">
           <div className="footer__brand">
             <Logo className="footer__logo" size="small" />
+            <p>Платформа для развития критического мышления</p>
           </div>
           <div className="footer__column">
             <h4>Для учителей</h4>

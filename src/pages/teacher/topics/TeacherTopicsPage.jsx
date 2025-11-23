@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import TopicCreate from '../../../features/teacher/topics/TopicCreate';
 import TopicList from '../../../features/teacher/topics/TopicList';
 
