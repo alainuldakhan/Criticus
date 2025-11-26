@@ -1,9 +1,10 @@
 export { default as http } from './http';
-export * from './auth';
-export * from './classes';
-export * from './students';
-export * from './invitations';
-export * from './ragStudent';
-export * from './ragTeacher';
+export { authApi } from './auth';
+export { classesApi } from './classes';
+export { studentsApi } from './students';
+export { invitationsApi } from './invitations';
+export { ragTeacherApi } from './ragTeacher';
+export { ragStudentApi } from './ragStudent';
+export { dashboardApi } from './dashboard';
 export * from './me';
 export * from './types';

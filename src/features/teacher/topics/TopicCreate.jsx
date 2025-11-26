@@ -63,7 +63,7 @@ const TopicCreate = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    
+
     if (!form.title.trim()) {
       setFeedback({ tone: 'error', message: 'Название темы обязательно.' });
       return;
@@ -92,18 +92,17 @@ const TopicCreate = () => {
 
   if (createMutation.isPending) {
     return (
-      <div className="panel">
+      <div className="panel panel--glass">
         <header className="panel__header">
-          <h1>Создание темы</h1>
-          <p>ИИ обрабатывает ваш запрос...</p>
+          <h1 className="panel__title panel__title--gradient">Создание темы</h1>
         </header>
         <div className="panel__section">
           <RagLoader
             message="Генерация темы с помощью ИИ..."
             subMessage={
               form.generateConspect
-                ? 'ИИ генерирует конспект и примеры ответов для каждого вопроса. Это может занять 2-3 минуты.'
-                : 'ИИ генерирует примеры ответов для каждого вопроса. Это может занять 2-3 минуты.'
+                ? 'ИИ генерирует конспект и примеры ответов. Это может занять 2-3 минуты.'
+                : 'ИИ генерирует примеры ответов. Это может занять 2-3 минуты.'
             }
           />
         </div>
@@ -112,96 +111,225 @@ const TopicCreate = () => {
   }
 
   return (
-    <div className="panel">
+    <div className="panel panel--glass">
       <header className="panel__header">
-        <h1>Создать новую тему</h1>
-        <p>Определите тему с вопросами. При необходимости укажите конспект или позвольте ИИ сгенерировать его.</p>
+        <h1 className="panel__title panel__title--gradient">Создать новую тему</h1>
       </header>
 
       {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
 
-      <form className="form" onSubmit={handleSubmit}>
-        <label className="form__field">
-          <span>Название темы</span>
-          <input
-            type="text"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            required
-            placeholder="Например: Введение в машинное обучение"
-          />
-        </label>
+      <form className="form" onSubmit={handleSubmit} style={{ display: 'grid', gap: '2rem' }}>
+        {/* Название темы */}
+        <div className="students-form">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #000000 0%, #404040 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              flexShrink: 0
+            }}>
+              📝
+            </div>
+            <h3 className="panel__subtitle" style={{ margin: 0 }}>Основная информация</h3>
+          </div>
+          <label className="form__field">
+            <span>Название темы</span>
+            <input
+              type="text"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              required
+              placeholder="Например: Введение в машинное обучение"
+            />
+          </label>
+        </div>
 
-        <section className="panel__section">
-          <div className="form__field-header">
-            <h3>Вопросы</h3>
+        {/* Вопросы */}
+        <div className="students-form">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                flexShrink: 0
+              }}>
+                ❓
+              </div>
+              <div>
+                <h3 className="panel__subtitle" style={{ margin: 0 }}>Вопросы</h3>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: '#737373' }}>Всего: {form.questions.length}</p>
+              </div>
+            </div>
             <button
               type="button"
               className="ghost-button"
               onClick={handleAddQuestion}
             >
-              Добавить вопрос
+              + Добавить вопрос
             </button>
           </div>
-          {form.questions.map((question, index) => (
-            <div key={index} className="form__field form__field--with-action">
-              <label>
-                <span>Вопрос {index + 1}</span>
-                <textarea
-                  value={question}
-                  onChange={(event) => handleQuestionChange(index, event.target.value)}
-                  placeholder="Введите текст вопроса..."
-                  rows={3}
-                />
-              </label>
-              {form.questions.length > 1 && (
-                <button
-                  type="button"
-                  className="ghost-button"
-                  onClick={() => handleRemoveQuestion(index)}
-                >
-                  Удалить
-                </button>
-              )}
-            </div>
-          ))}
-        </section>
 
-        <section className="panel__section">
-          <label className="form__field">
-            <div className="form__checkbox-wrapper">
-              <input
-                type="checkbox"
-                name="generateConspect"
-                checked={form.generateConspect}
-                onChange={handleChange}
-              />
-              <span>Автоматически сгенерировать конспект с помощью ИИ</span>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {form.questions.map((question, index) => (
+              <div key={index} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <label className="form__field">
+                    <span>Вопрос {index + 1}</span>
+                    <textarea
+                      value={question}
+                      onChange={(event) => handleQuestionChange(index, event.target.value)}
+                      placeholder="Введите текст вопроса..."
+                      rows={3}
+                    />
+                  </label>
+                </div>
+                {form.questions.length > 1 && (
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => handleRemoveQuestion(index)}
+                    style={{ marginTop: '1.8rem' }}
+                  >
+                    Удалить
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Конспект */}
+        <div className="students-form">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              flexShrink: 0
+            }}>
+              📚
             </div>
-            <p className="form__hint">
-              Если включено, ИИ сгенерирует конспект на основе темы и вопросов.
-              В противном случае укажите свой конспект ниже.
-            </p>
-          </label>
+            <h3 className="panel__subtitle" style={{ margin: 0 }}>Конспект</h3>
+          </div>
+
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)',
+            border: '2px solid rgba(139, 92, 246, 0.2)',
+            borderRadius: '16px',
+            padding: '1.5rem',
+            transition: 'all 0.3s ease'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.25rem',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)'
+                }}>
+                  🤖
+                </div>
+                <div>
+                  <label htmlFor="generateConspect" style={{
+                    cursor: 'pointer',
+                    margin: 0,
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                  }}>
+                    Автоматически сгенерировать конспект с помощью модели
+                  </label>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#737373' }}>
+                    Модель проанализирует тему и создаст детальный конспект
+                  </p>
+                </div>
+              </div>
+
+              <label className="ai-toggle" style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  name="generateConspect"
+                  id="generateConspect"
+                  checked={form.generateConspect}
+                  onChange={handleChange}
+                  style={{ display: 'none' }}
+                />
+                <div style={{
+                  width: '56px',
+                  height: '32px',
+                  borderRadius: '16px',
+                  background: form.generateConspect
+                    ? 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+                    : '#e5e7eb',
+                  position: 'relative',
+                  transition: 'all 0.3s ease',
+                  boxShadow: form.generateConspect
+                    ? '0 4px 12px rgba(99, 102, 241, 0.4)'
+                    : 'none'
+                }}>
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: '#ffffff',
+                    position: 'absolute',
+                    top: '4px',
+                    left: form.generateConspect ? '28px' : '4px',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem'
+                  }}>
+                    {form.generateConspect && '✨'}
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
 
           {!form.generateConspect && (
-            <label className="form__field">
-              <span>Конспект</span>
+            <label className="form__field" style={{ marginTop: '1rem' }}>
+              <span>Текст конспекта</span>
               <textarea
                 name="conspect"
                 value={form.conspect}
                 onChange={handleChange}
-                placeholder="Введите текст конспекта (лекционные заметки, ключевые моменты и т.д.)..."
+                placeholder="Введите текст конспекта (лекционные заметки, ключевые моменты)..."
                 rows={8}
               />
-              <p className="form__hint">
-                Укажите подробные лекционные заметки или ключевые моменты, которые будут использоваться для оценки ответов студентов.
-              </p>
             </label>
           )}
-        </section>
+        </div>
 
+        {/* Кнопки */}
         <div className="form__actions">
           <button type="submit" className="button" disabled={createMutation.isPending}>
             {createMutation.isPending ? 'Создание…' : 'Создать тему'}

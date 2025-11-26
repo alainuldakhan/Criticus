@@ -1,13 +1,15 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
 const sectionLinkClass = ({ isActive }) =>
-  isActive ? 'section-layout__link active' : 'section-layout__link';
+  isActive ? 'section-layout__link section-layout__link--active' : 'section-layout__link';
 
 const TeacherLayout = () => {
   return (
-    <div className="section-layout">
-      <aside className="section-layout__sidebar">
-        <h2 className="section-layout__title">Инструменты преподавателя</h2>
+    <div className="section-layout section-layout--glass">
+      <aside className="section-layout__sidebar section-layout__sidebar--glass">
+        <h2 className="section-layout__title section-layout__title--gradient">
+          Инструменты преподавателя
+        </h2>
         <nav className="section-layout__nav" aria-label="Навигация преподавателя">
           <NavLink end to="/teacher" className={sectionLinkClass}>
             Обзор
@@ -22,10 +24,10 @@ const TeacherLayout = () => {
             Приглашения
           </NavLink>
           <NavLink to="topics" className={sectionLinkClass}>
-            RAG Темы
+            Темы
           </NavLink>
           <NavLink to="rag" className={sectionLinkClass}>
-            RAG Аналитика
+            Аналитика
           </NavLink>
         </nav>
       </aside>

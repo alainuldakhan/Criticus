@@ -98,9 +98,9 @@ const ClassMembers = ({ classId }) => {
         term.length === 0
           ? true
           : [student.label, student.email ?? '', student.userId]
-              .join(' ')
-              .toLowerCase()
-              .includes(term)
+            .join(' ')
+            .toLowerCase()
+            .includes(term)
       )
       .filter((student) => !students.some((m) => m.userId === student.userId));
   }, [allStudents, studentSearch, students]);

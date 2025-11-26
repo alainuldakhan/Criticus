@@ -1,200 +1,286 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { profileApi } from '../../api/me';
-import useAuth from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { authApi } from '../../api/auth';
 import Alert from '../../components/ui/Alert';
-import Loader from '../../components/ui/Loader';
-
-const emptyProfile = {
-  firstName: '',
-  lastName: '',
-  birthDate: '',
-  avatarUrl: '',
-  bio: '',
-};
+import { useAuth } from '../../hooks/useAuth';
 
 const ProfilePage = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, refresh } = useAuth();
-  const [profile, setProfile] = useState(emptyProfile);
   const [feedback, setFeedback] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const query = useQuery({
-    queryKey: ['me', 'profile'],
-    queryFn: profileApi.getProfile,
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
   });
 
-  useEffect(() => {
-    if (query.data) {
-      setProfile({
-        firstName: query.data.firstName ?? '',
-        lastName: query.data.lastName ?? '',
-        birthDate: query.data.birthDate ? new Date(query.data.birthDate).toISOString().slice(0, 10) : '',
-        avatarUrl: query.data.avatarUrl ?? '',
-        bio: query.data.bio ?? '',
-      });
-    }
-  }, [query.data]);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
-  const mutation = useMutation({
-    mutationFn: profileApi.updateProfile,
-    onSuccess: (data) => {
-      queryClient.setQueryData(['me', 'profile'], data);
-      setFeedback({ tone: 'success', message: 'Профиль успешно обновлён.' });
-      refresh();
+  const updateMutation = useMutation({
+    mutationFn: (data) => authApi.updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      setFeedback({ tone: 'success', message: 'Профиль успешно обновлён' });
+      setIsEditing(false);
     },
     onError: (error) => {
-      const message = error?.response?.data?.error || error?.message || 'Не удалось обновить профиль.';
-      setFeedback({ tone: 'error', message });
+      setFeedback({
+        tone: 'error',
+        message: error?.response?.data?.error || 'Не удалось обновить профиль'
+      });
     },
   });
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const payload = {
-      firstName: profile.firstName || null,
-      lastName: profile.lastName || null,
-      birthDate: profile.birthDate ? new Date(profile.birthDate).toISOString() : null,
-      avatarUrl: profile.avatarUrl || null,
-      bio: profile.bio || null,
-    };
-    mutation.mutate(payload);
-  };
-
-  const handleReset = () => {
-    if (query.data) {
-      setProfile({
-        firstName: query.data.firstName ?? '',
-        lastName: query.data.lastName ?? '',
-        birthDate: query.data.birthDate ? new Date(query.data.birthDate).toISOString().slice(0, 10) : '',
-        avatarUrl: query.data.avatarUrl ?? '',
-        bio: query.data.bio ?? '',
+  const passwordMutation = useMutation({
+    mutationFn: (data) => authApi.changePassword(data),
+    onSuccess: () => {
+      setFeedback({ tone: 'success', message: 'Пароль успешно изменён' });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    },
+    onError: (error) => {
+      setFeedback({
+        tone: 'error',
+        message: error?.response?.data?.error || 'Не удалось изменить пароль'
       });
-    } else {
-      setProfile(emptyProfile);
-    }
-    setFeedback(null);
+    },
+  });
+
+  const handleUpdateProfile = (e) => {
+    e.preventDefault();
+    updateMutation.mutate(formData);
   };
 
-  const roleSummary = useMemo(() => {
-    if (!user.roles?.length) return 'Роли ещё не назначены.';
-    return user.roles.map(role => role === 'Teacher' ? 'Учитель' : role === 'Student' ? 'Ученик' : role).join(', ');
-  }, [user.roles]);
+  const handleChangePassword = (e) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setFeedback({ tone: 'error', message: 'Пароли не совпадают' });
+      return;
+    }
+    passwordMutation.mutate({
+      currentPassword: passwordData.currentPassword,
+      newPassword: passwordData.newPassword,
+    });
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   return (
-    <section className="page">
-      <div className="panel">
+    <div className="page">
+      <div className="panel panel--glass" style={{ maxWidth: '800px', margin: '0 auto' }}>
         <header className="panel__header">
-          <h1>Мой профиль</h1>
-          <p>Обновите личную информацию, которая доступна вашим классам и опекунам.</p>
+          <h1 className="panel__title panel__title--gradient">Профиль</h1>
         </header>
 
-        <section className="panel__section">
-          <h2>Обзор аккаунта</h2>
-          <div className="detail-grid">
-            <div>
-              <span className="detail-label">Email</span>
-              <span>{user.email ?? 'Неизвестно'}</span>
+        {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
+
+        {/* User Info Section */}
+        <div className="students-form" style={{ marginBottom: '2rem' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.5rem',
+            marginBottom: '2rem',
+            padding: '2rem',
+            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)',
+            borderRadius: '16px'
+          }}>
+            {/* Avatar */}
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              flexShrink: 0
+            }}>
+              {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
             </div>
-            <div>
-              <span className="detail-label">ID пользователя</span>
-              <span>{user.userId}</span>
-            </div>
-            <div>
-              <span className="detail-label">Роли</span>
-              <span>{roleSummary}</span>
+
+            {/* User details */}
+            <div style={{ flex: 1 }}>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>
+                {user?.name || 'Пользователь'}
+              </h2>
+              <p style={{ margin: '0.25rem 0 0 0', color: '#737373' }}>
+                {user?.email}
+              </p>
+              <p style={{
+                margin: '0.5rem 0 0 0',
+                fontSize: '0.875rem',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '12px',
+                background: 'rgba(99, 102, 241, 0.15)',
+                color: '#6366f1',
+                display: 'inline-block',
+                fontWeight: 500
+              }}>
+                {user?.role === 'teacher' ? '👨‍🏫 Преподаватель' : '👨‍🎓 Студент'}
+              </p>
             </div>
           </div>
-        </section>
 
-        <section className="panel__section">
-          <h2>Личные данные</h2>
+          {/* Profile Edit Form */}
+          <h2 className="panel__subtitle" style={{ marginBottom: '1rem' }}>Личная информация</h2>
 
-          {query.isLoading && <Loader message="Загрузка профиля…" />}
-          {query.isError && (
-            <Alert tone="error">{query.error?.message || 'Не удалось загрузить профиль.'}</Alert>
-          )}
-          {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
-
-          {!query.isLoading && (
-            <form className="form" onSubmit={handleSubmit}>
-              <div className="form__row">
-                <label className="form__field">
-                  <span>Имя</span>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={profile.firstName}
-                    onChange={handleChange}
-                    placeholder="Алексей"
-                  />
-                </label>
-                <label className="form__field">
-                  <span>Фамилия</span>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={profile.lastName}
-                    onChange={handleChange}
-                    placeholder="Иванов"
-                  />
-                </label>
+          {!isEditing ? (
+            <div style={{
+              padding: '1.5rem',
+              background: 'rgba(0, 0, 0, 0.02)',
+              borderRadius: '12px'
+            }}>
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.875rem', color: '#737373', marginBottom: '0.25rem' }}>Имя</div>
+                <div style={{ fontSize: '1rem', fontWeight: 500 }}>{user?.name || '—'}</div>
               </div>
-
-              <div className="form__row">
-                <label className="form__field">
-                  <span>Дата рождения</span>
-                  <input
-                    type="date"
-                    name="birthDate"
-                    value={profile.birthDate}
-                    onChange={handleChange}
-                    max={new Date().toISOString().slice(0, 10)}
-                  />
-                </label>
-                <label className="form__field">
-                  <span>URL аватара</span>
-                  <input
-                    type="url"
-                    name="avatarUrl"
-                    value={profile.avatarUrl}
-                    onChange={handleChange}
-                    placeholder="https://example.com/avatar.jpg"
-                  />
-                </label>
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#737373', marginBottom: '0.25rem' }}>Email</div>
+                <div style={{ fontSize: '1rem', fontWeight: 500 }}>{user?.email}</div>
               </div>
+              <button
+                type="button"
+                className="ghost-button"
+                onClick={() => setIsEditing(true)}
+                style={{ marginTop: '1rem' }}
+              >
+                Редактировать
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleUpdateProfile} className="form">
+              <label className="form__field">
+                <span>Имя</span>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </label>
 
               <label className="form__field">
-                <span>О себе</span>
-                <textarea
-                  name="bio"
-                  value={profile.bio}
-                  onChange={handleChange}
-                  maxLength={1024}
-                  placeholder="Расскажите одноклассникам о своих интересах и целях."
-                  rows={5}
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
                 />
-                <span className="helper-text">{profile.bio.length}/1024 символов</span>
               </label>
 
               <div className="form__actions">
-                <button type="submit" className="button" disabled={mutation.isPending}>
-                  {mutation.isPending ? 'Сохранение…' : 'Сохранить изменения'}
+                <button
+                  type="submit"
+                  className="button"
+                  disabled={updateMutation.isPending}
+                >
+                  {updateMutation.isPending ? 'Сохранение...' : 'Сохранить'}
                 </button>
-                <button type="button" className="ghost-button" onClick={handleReset}>
-                  Сбросить
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setFormData({ name: user?.name || '', email: user?.email || '' });
+                  }}
+                >
+                  Отмена
                 </button>
               </div>
             </form>
           )}
-        </section>
+        </div>
+
+        {/* Change Password Section */}
+        <div className="students-form" style={{ marginBottom: '2rem' }}>
+          <h2 className="panel__subtitle" style={{ marginBottom: '1rem' }}>Изменить пароль</h2>
+
+          <form onSubmit={handleChangePassword} className="form">
+            <label className="form__field">
+              <span>Текущий пароль</span>
+              <input
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                required
+              />
+            </label>
+
+            <label className="form__field">
+              <span>Новый пароль</span>
+              <input
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                required
+                minLength={6}
+              />
+            </label>
+
+            <label className="form__field">
+              <span>Подтвердите новый пароль</span>
+              <input
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                required
+                minLength={6}
+              />
+            </label>
+
+            <div className="form__actions">
+              <button
+                type="submit"
+                className="button"
+                disabled={passwordMutation.isPending}
+              >
+                {passwordMutation.isPending ? 'Изменение...' : 'Изменить пароль'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Logout Section */}
+        <div style={{
+          padding: '2rem',
+          background: 'rgba(239, 68, 68, 0.05)',
+          borderRadius: '16px',
+          textAlign: 'center'
+        }}>
+          <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem', fontWeight: 600 }}>
+            Выйти из аккаунта
+          </h3>
+          <p style={{ margin: '0 0 1.5rem 0', color: '#737373', fontSize: '0.875rem' }}>
+            Вы будете перенаправлены на главную страницу
+          </p>
+          <button
+            type="button"
+            className="button"
+            onClick={handleLogout}
+            style={{
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              border: 'none'
+            }}
+          >
+            🚪 Выйти
+          </button>
+        </div>
       </div>
-    </section>
+    </div>
   );
 };
 

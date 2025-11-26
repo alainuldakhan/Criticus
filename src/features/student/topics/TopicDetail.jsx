@@ -53,58 +53,143 @@ const TopicDetail = () => {
   }
 
   return (
-    <div className="panel">
+    <div className="panel panel--glass">
       <header className="panel__header">
-        <div>
-          <h1>{topic.title ?? 'Без названия'}</h1>
-          <p>Создано {new Date(topic.createdUtc).toLocaleString('ru-RU')}</p>
-        </div>
+        <h1 className="panel__title panel__title--gradient">{topic.title ?? 'Без названия'}</h1>
+        <p style={{ color: '#737373', marginTop: '0.5rem' }}>
+          Создано {new Date(topic.createdUtc).toLocaleDateString('ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          })}
+        </p>
       </header>
 
       {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
 
+      {/* Questions Count Badge */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div className="stat-card-compact" style={{ display: 'inline-flex', padding: '0.75rem 1.5rem' }}>
+          <span style={{ marginRight: '0.5rem' }}>❓</span>
+          <span style={{ fontWeight: 600 }}>{topic.questions?.length || 0} вопросов</span>
+        </div>
+      </div>
+
       {topic.conspect && (
-        <section className="panel__section">
-          <h2>Конспект</h2>
-          <div className="conspect-preview">
-            <pre>{topic.conspect}</pre>
+        <div className="students-form" style={{ marginBottom: '2rem' }}>
+          <h2 className="panel__subtitle" style={{ marginBottom: '1rem' }}>📚 Конспект</h2>
+          <div style={{
+            padding: '1.5rem',
+            background: 'rgba(0, 0, 0, 0.02)',
+            borderRadius: '12px',
+            lineHeight: '1.8',
+            whiteSpace: 'pre-wrap',
+            fontFamily: 'inherit'
+          }}>
+            {topic.conspect}
           </div>
-        </section>
+        </div>
       )}
 
-      <section className="panel__section">
-        <h2>Вопросы</h2>
+      <div className="students-form">
+        <h2 className="panel__subtitle" style={{ marginBottom: '1rem' }}>❓ Вопросы</h2>
         {topic.questions?.length ? (
-          <ol className="question-list">
-            {topic.questions.map((question) => (
-              <li key={question.id}>
-                <p>{question.text ?? 'Вопрос'}</p>
-                {question.generated?.answer && (
-                  <details>
-                    <summary>Пример ответа</summary>
-                    <p>{question.generated.answer}</p>
-                  </details>
-                )}
+          <ol style={{
+            listStyle: 'none',
+            // counter-reset: 'question-counter', // This is CSS, not JSX style
+            padding: 0,
+            margin: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            {topic.questions.map((question, index) => (
+              <li key={question.id} style={{
+                padding: '1.5rem',
+                background: 'rgba(0, 0, 0, 0.02)',
+                borderRadius: '12px',
+                // counterIncrement: 'question-counter', // This is CSS, not JSX style
+                position: 'relative'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  gap: '1rem',
+                  alignItems: 'flex-start'
+                }}>
+                  <span style={{
+                    minWidth: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '0.875rem'
+                  }}>
+                    {index + 1}
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontWeight: 500, fontSize: '1rem' }}>
+                      {question.text ?? 'Вопрос'}
+                    </p>
+                    {question.generated?.answer && (
+                      <details style={{ marginTop: '1rem' }}>
+                        <summary style={{
+                          cursor: 'pointer',
+                          color: '#6366f1',
+                          fontWeight: 500,
+                          fontSize: '0.875rem'
+                        }}>
+                          Показать пример ответа
+                        </summary>
+                        <p style={{
+                          marginTop: '0.75rem',
+                          padding: '1rem',
+                          background: 'white',
+                          borderRadius: '8px',
+                          fontSize: '0.875rem',
+                          lineHeight: '1.6'
+                        }}>
+                          {question.generated.answer}
+                        </p>
+                      </details>
+                    )}
+                  </div>
+                </div>
               </li>
             ))}
           </ol>
         ) : (
-          <p>Для этой темы вопросы пока не доступны.</p>
+          <p style={{ color: '#737373' }}>Для этой темы вопросы пока не доступны.</p>
         )}
-      </section>
+      </div>
 
-      <section className="panel__section">
-        <div className="form__actions">
-          <button
-            type="button"
-            className="button"
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? 'Запуск…' : 'Начать сессию'}
-          </button>
-        </div>
-      </section>
+      {/* CTA Button */}
+      <div style={{
+        marginTop: '3rem',
+        padding: '2rem',
+        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)',
+        borderRadius: '16px',
+        textAlign: 'center'
+      }}>
+        <button
+          type="button"
+          className="button"
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending}
+          style={{
+            fontSize: '1.125rem',
+            padding: '1rem 3rem',
+            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+            border: 'none',
+            cursor: mutation.isPending ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {mutation.isPending ? '🚀 Запуск сессии...' : '🚀 Начать сессию'}
+        </button>
+      </div>
     </div>
   );
 };

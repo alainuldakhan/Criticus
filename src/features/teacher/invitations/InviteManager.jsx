@@ -33,14 +33,14 @@ const InviteManager = () => {
     mutationFn: ({ classId, payload }) => invitationsApi.create(classId, payload),
     onSuccess: (data) => {
       setInviteResult(data);
-      setFeedback({ tone: 'success', message: 'Invitation created successfully.' });
+      setFeedback({ tone: 'success', message: 'Приглашение успешно создано.' });
     },
     onError: (error) => {
       const message =
         error?.response?.data?.error ||
         error?.response?.data?.title ||
         error?.message ||
-        'Failed to create invitation.';
+        'Не удалось создать приглашение.';
       setFeedback({ tone: 'error', message });
     },
   });
@@ -48,7 +48,7 @@ const InviteManager = () => {
   const handleCreate = (event) => {
     event.preventDefault();
     if (!selectedClassId) {
-      setFeedback({ tone: 'error', message: 'Select a class first.' });
+      setFeedback({ tone: 'error', message: 'Сначала выберите класс.' });
       return;
     }
     mutation.mutate({ classId: selectedClassId, payload: { emailHint } });
@@ -58,11 +58,11 @@ const InviteManager = () => {
     if (!inviteResult?.inviteUrl) return;
     try {
       await navigator.clipboard.writeText(inviteResult.inviteUrl);
-      setFeedback({ tone: 'success', message: 'Invite link copied to clipboard.' });
+      setFeedback({ tone: 'success', message: 'Ссылка-приглашение скопирована в буфер обмена.' });
     } catch (error) {
       setFeedback({
         tone: 'error',
-        message: 'Unable to copy automatically. Please copy the link manually.',
+        message: 'Не удалось скопировать автоматически. Пожалуйста, скопируйте ссылку вручную.',
       });
     }
   };
@@ -72,46 +72,33 @@ const InviteManager = () => {
   }, [classes]);
 
   return (
-    <div className="panel">
+    <div className="panel panel--glass">
       <header className="panel__header">
-        <h1>Class invitations</h1>
-        <p>
-          Generate invite links for students or guardians. Links expire automatically and
-          must be accepted before the class gains new members.
-        </p>
+        <h1 className="panel__title panel__title--gradient">Приглашения в класс</h1>
       </header>
 
-      <section className="panel__section">
-        <h2>Select a class</h2>
-        <label className="form__field">
-          <span>Class</span>
-          <select
-            value={selectedClassId}
-            onChange={(event) => setSelectedClassId(event.target.value)}
-            disabled={isLoadingClasses}
-          >
-            <option value="">Choose a class…</option>
-            {sortedClasses.map((klass) => (
-              <option key={klass.id} value={klass.id}>
-                {klass.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      </section>
+      {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
 
       <section className="panel__section">
-        <h2>Create invitation</h2>
-        <p>
-          Optionally provide an email hint to remember who this invite was generated for.
-          Use the invite link to allow students to set up their account or join the class.
-        </p>
-
-        {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
-
         <form className="form" onSubmit={handleCreate}>
           <label className="form__field">
-            <span>Email hint (optional)</span>
+            <span>Класс</span>
+            <select
+              value={selectedClassId}
+              onChange={(event) => setSelectedClassId(event.target.value)}
+              disabled={isLoadingClasses}
+            >
+              <option value="">Выберите класс…</option>
+              {sortedClasses.map((klass) => (
+                <option key={klass.id} value={klass.id}>
+                  {klass.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="form__field">
+            <span>Email</span>
             <input
               type="email"
               placeholder="student@example.com"
@@ -119,24 +106,55 @@ const InviteManager = () => {
               onChange={(event) => setEmailHint(event.target.value)}
             />
           </label>
+
           <button type="submit" className="button" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creating…' : 'Generate invite'}
+            {mutation.isPending ? 'Создание…' : 'Создать приглашение'}
           </button>
         </form>
       </section>
 
       {inviteResult && (
         <section className="panel__section">
-          <h2>Invite link</h2>
-          <p>
-            Share this link securely. It expires on{' '}
-            <strong>{new Date(inviteResult.expiresUtc).toLocaleString()}</strong>.
-          </p>
-          <div className="invite-preview">
-            <code>{inviteResult.inviteUrl}</code>
-            <button type="button" className="ghost-button" onClick={handleCopy}>
-              Copy link
+          <h2 className="panel__subtitle">Пригласительная ссылка создана!</h2>
+
+          <div className="invite-result-card">
+            <div className="invite-result-card__header">
+              <div className="invite-result-card__icon">✉️</div>
+              <div className="invite-result-card__info">
+                <h3 className="invite-result-card__title">Готово к отправке</h3>
+                {inviteResult.emailHint && (
+                  <p className="invite-result-card__hint">Для: {inviteResult.emailHint}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="invite-result-card__expiry">
+              <span className="invite-result-card__expiry-icon">⏱️</span>
+              <span className="invite-result-card__expiry-text">
+                Истекает {new Date(inviteResult.expiresUtc).toLocaleString('ru-RU', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+
+            <div className="invite-result-card__url">
+              <code className="invite-result-card__code">{inviteResult.inviteUrl}</code>
+            </div>
+
+            <button
+              type="button"
+              className="invite-result-card__copy-btn"
+              onClick={handleCopy}
+            >
+              <span className="invite-result-card__copy-icon">📋</span>
+              Скопировать ссылку
             </button>
+
+
           </div>
         </section>
       )}

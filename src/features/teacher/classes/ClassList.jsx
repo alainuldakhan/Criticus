@@ -74,99 +74,152 @@ const ClassList = () => {
     });
   }, [classes]);
 
+  // Вычисляем статистику
+  const totalClasses = classes.length;
+  const totalStudents = classes.reduce((sum, klass) => sum + (klass.studentCount ?? 0), 0);
+  const avgClassSize = totalClasses > 0 ? Math.round(totalStudents / totalClasses) : 0;
+
   return (
-    <div className="panel">
+    <div className="panel panel--glass">
       <header className="panel__header">
         <div>
-          <h1>Ваши классы</h1>
-          <p>Организуйте группы по учебному году, отслеживайте состав и просматривайте детали.</p>
+          <h1 className="panel__title panel__title--gradient">Ваши классы</h1>
+          <p className="panel__description">Создавайте и организуйте группы по учебному году, отслеживайте студентов и просматривайте детали</p>
         </div>
       </header>
 
-      <section className="panel__section">
-        <h2>Создать новый класс</h2>
-        <p>Укажите название класса и опциональные данные о классе/годе.</p>
-
-        {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
-
-        <form className="form" onSubmit={handleSubmit}>
-          <label className="form__field">
-            <span>Название класса</span>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              placeholder="Например: Критическое мышление 7А"
-            />
-          </label>
-          <div className="form__row">
-            <label className="form__field">
-              <span>Класс</span>
-              <input
-                type="number"
-                name="grade"
-                min="1"
-                max="12"
-                value={form.grade}
-                onChange={handleChange}
-                placeholder="например: 7"
-              />
-            </label>
-            <label className="form__field">
-              <span>Год</span>
-              <input
-                type="number"
-                name="year"
-                min="2000"
-                max="2099"
-                value={form.year}
-                onChange={handleChange}
-                placeholder="например: 2025"
-              />
-            </label>
-          </div>
-          <button type="submit" className="button" disabled={createMutation.isPending}>
-            {createMutation.isPending ? 'Создание…' : 'Создать класс'}
-          </button>
-        </form>
-      </section>
-
-      <section className="panel__section">
-        <h2>Список классов</h2>
-        {isLoading && <p>Загрузка классов…</p>}
-        {isError && <Alert tone="error">{error?.message || 'Не удалось загрузить классы.'}</Alert>}
-        {emptyState && <p>Классов пока нет. Создайте класс для начала работы.</p>}
-
-        {!isLoading && !isError && classes.length > 0 && (
-          <div className="table">
-            <div className="table__head">
-              <span>Название</span>
-              <span>Класс</span>
-              <span>Год</span>
-              <span>Детали</span>
+      {/* Summary Statistics */}
+      {!isLoading && classes.length > 0 && (
+        <div className="classes-stats">
+          <div className="stat-card-compact">
+            <span className="stat-card-compact__icon">🏫</span>
+            <div className="stat-card-compact__info">
+              <div className="stat-card-compact__value">{totalClasses}</div>
+              <div className="stat-card-compact__label">Всего классов</div>
             </div>
-            {groupedByYear.map(([year, items]) => (
-              <div key={year} className="table__group">
-                <div className="table__group-label">{year === 'No year' ? 'Год не указан' : year}</div>
-                {items.map((klass) => (
-                  <div key={klass.id} className="table__row">
-                    <span>{klass.name}</span>
-                    <span>{klass.grade ?? '—'}</span>
-                    <span>{klass.year ?? '—'}</span>
-                    <span>
-                      <Link to={`/teacher/classes/${klass.id}`} className="ghost-link">
-                        Подробнее
-                      </Link>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ))}
           </div>
-        )}
-      </section>
+        </div>
+      )}
+
+      {/* Two-column layout */}
+      <div className="classes-layout">
+        {/* Form Sidebar */}
+        <aside className="classes-form-sidebar">
+          <h2 className="panel__subtitle">Создать новый класс</h2>
+          {feedback && <Alert tone={feedback.tone}>{feedback.message}</Alert>}
+
+          <form className="form" onSubmit={handleSubmit}>
+            <label className="form__field">
+              <br></br>
+              <span>Название класса</span>
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                placeholder="Например: Критическое мышление"
+              />
+            </label>
+            <div className="form__row">
+              <label className="form__field">
+                <span>Класс</span>
+                <input
+                  type="number"
+                  name="grade"
+                  min="1"
+                  max="12"
+                  value={form.grade}
+                  onChange={handleChange}
+                  placeholder="например: 7"
+                />
+              </label>
+              <label className="form__field">
+                <span>Год</span>
+                <input
+                  type="number"
+                  name="year"
+                  min="2000"
+                  max="2099"
+                  value={form.year}
+                  onChange={handleChange}
+                  placeholder="например: 2025"
+                />
+              </label>
+            </div>
+            <button type="submit" className="button" disabled={createMutation.isPending}>
+              {createMutation.isPending ? 'Создание…' : 'Создать класс'}
+            </button>
+          </form>
+        </aside>
+
+        {/* Main Content */}
+        <main className="classes-main-content">
+          <h2 className="panel__subtitle">Список классов</h2>
+
+          {isLoading && <p>Загрузка классов…</p>}
+          {isError && <Alert tone="error">{error?.message || 'Не удалось загрузить классы.'}</Alert>}
+
+          {emptyState && (
+            <div className="empty-state">
+              <div className="empty-state__icon">📚</div>
+              <p className="empty-state__text">Классов пока нет</p>
+              <p className="empty-state__hint">Создайте первый класс, чтобы начать работу</p>
+            </div>
+          )}
+
+          {!isLoading && !isError && classes.length > 0 && (
+            <div className="classes-container">
+              {groupedByYear.map(([year, items]) => (
+                <div key={year} className="classes-year-group">
+                  <div className="classes-year-label">
+                    {year === 'No year' ? 'Год не указан' : `Учебный год: ${year}`}
+                  </div>
+                  <div className="classes-grid">
+                    {items.map((klass) => (
+                      <div key={klass.id} className="class-card">
+                        <div className="class-card__header">
+                          <div className="class-card__icon">🎓</div>
+                          <div className="class-card__info">
+                            <h3 className="class-card__name">{klass.name}</h3>
+                            {klass.grade && (
+                              <span className="class-card__badge">{klass.grade} класс</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="class-card__stats">
+                          <div className="class-card__stat">
+                            <span className="class-card__stat-icon">👥</span>
+                            <span className="class-card__stat-value">
+                              {klass.studentCount ?? 0} студентов
+                            </span>
+                          </div>
+                          {klass.year && (
+                            <div className="class-card__stat">
+                              <span className="class-card__stat-icon">📅</span>
+                              <span className="class-card__stat-value">{klass.year}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="class-card__footer">
+                          <Link
+                            to={`/teacher/classes/${klass.id}`}
+                            className="class-card__link"
+                          >
+                            Подробнее →
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

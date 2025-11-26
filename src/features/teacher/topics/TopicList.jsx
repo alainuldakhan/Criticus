@@ -35,11 +35,10 @@ const TopicList = () => {
   };
 
   return (
-    <div className="panel">
+    <div className="panel panel--glass">
       <header className="panel__header panel__header--split">
         <div>
-          <h1>Созданные темы</h1>
-          <p>Просматривайте и управляйте созданными вами темами для адаптивных учебных сессий.</p>
+          <h1 className="panel__title panel__title--gradient">Созданные темы</h1>
         </div>
         <div className="panel__actions">
           <button
@@ -52,58 +51,91 @@ const TopicList = () => {
         </div>
       </header>
 
+      {/* Stats */}
+      {!query.isLoading && total > 0 && (
+        <div className="classes-stats">
+          <div className="stat-card-compact">
+            <span className="stat-card-compact__icon">📚</span>
+            <div className="stat-card-compact__info">
+              <div className="stat-card-compact__value">{total}</div>
+              <div className="stat-card-compact__label">Всего тем</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {query.isLoading && <p>Загрузка тем…</p>}
       {query.isError && (
         <Alert tone="error">{query.error?.message || 'Не удалось загрузить темы.'}</Alert>
       )}
 
-      {!query.isLoading && topics.length === 0 && <p>Темы пока не созданы.</p>}
-
-      {!query.isLoading && topics.length > 0 && (
-        <div className="table">
-          <div className="table__head">
-            <span>Название</span>
-            <span>Создано</span>
-            <span />
-          </div>
-          {topics.map((topic) => (
-            <div key={topic.id} className="table__row">
-              <span>{topic.title ?? 'Без названия'}</span>
-              <span>{new Date(topic.createdUtc).toLocaleDateString('ru-RU')}</span>
-              <span>
-                <Link to={`/teacher/topics/${topic.id}`} className="ghost-link">
-                  Подробнее
-                </Link>
-              </span>
-            </div>
-          ))}
+      {!query.isLoading && topics.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-state__icon">📝</div>
+          <p className="empty-state__text">Темы пока не созданы</p>
+          <p className="empty-state__hint">Создайте первую тему для учебных сессий</p>
         </div>
       )}
 
-      <div className="pagination">
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={() => handlePageChange(-1)}
-          disabled={filters.page === 1}
-        >
-          Назад
-        </button>
-        <span>
-          Страница {filters.page} из {totalPages}
-        </span>
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={() => handlePageChange(1)}
-          disabled={filters.page >= totalPages}
-        >
-          Вперёд
-        </button>
-      </div>
+      {!query.isLoading && topics.length > 0 && (
+        <>
+          <div className="classes-grid">
+            {topics.map((topic) => (
+              <div key={topic.id} className="class-card">
+                <div className="class-card__header">
+                  <div className="class-card__icon">📖</div>
+                  <div className="class-card__info">
+                    <h3 className="class-card__name">{topic.title ?? 'Без названия'}</h3>
+                  </div>
+                </div>
+
+                <div className="class-card__stats">
+                  <div className="class-card__stat">
+                    <span className="class-card__stat-icon">📅</span>
+                    <span className="class-card__stat-value">
+                      {new Date(topic.createdUtc).toLocaleDateString('ru-RU', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="class-card__footer">
+                  <Link to={`/teacher/topics/${topic.id}`} className="class-card__link">
+                    Подробнее →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pagination">
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => handlePageChange(-1)}
+              disabled={filters.page === 1}
+            >
+              ← Назад
+            </button>
+            <span className="pagination__info">
+              Страница {filters.page} из {totalPages}
+            </span>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => handlePageChange(1)}
+              disabled={filters.page >= totalPages}
+            >
+              Вперёд →
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
 export default TopicList;
-
