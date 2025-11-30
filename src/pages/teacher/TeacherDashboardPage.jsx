@@ -20,16 +20,6 @@ const TeacherDashboardPage = () => {
     queryFn: () => studentsApi.search({ page: 1, pageSize: 1 }),
   });
 
-  const { data: activities, isLoading: isLoadingActivities } = useQuery({
-    queryKey: ['teacher', 'dashboard', 'activities'],
-    queryFn: () => dashboardApi.getRecentActivities({ limit: 3 }),
-  });
-
-  const { data: events, isLoading: isLoadingEvents } = useQuery({
-    queryKey: ['teacher', 'dashboard', 'events'],
-    queryFn: dashboardApi.getUpcomingEvents,
-  });
-
   const { data: topStudents, isLoading: isLoadingTopStudents } = useQuery({
     queryKey: ['teacher', 'dashboard', 'top-students'],
     queryFn: () => dashboardApi.getTopStudents({ limit: 3, period: 'month' }),
@@ -93,12 +83,6 @@ const TeacherDashboardPage = () => {
               {isLoadingOverview ? '...' : weeklyStats.activeClasses}
             </div>
             <div className="weekly-stat__label">Активных классов</div>
-          </div>
-          <div className="weekly-stat">
-            <div className="weekly-stat__value">
-              {isLoadingOverview ? '...' : `${weeklyStats.avgEngagement}%`}
-            </div>
-            <div className="weekly-stat__label">Средняя вовлечённость</div>
           </div>
         </div>
       </div>
@@ -164,60 +148,9 @@ const TeacherDashboardPage = () => {
         </div>
       </div>
 
-      {/* Двухколоночная секция */}
-      <div className="dashboard-twin-section">
-        {/* Последние активности */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card__title">🔔 Последние события</h3>
-          {isLoadingActivities ? (
-            <p>Загрузка...</p>
-          ) : activities && activities.length > 0 ? (
-            <div className="activity-feed">
-              {activities.map((activity) => (
-                <div key={activity.id} className="activity-item">
-                  <div className="activity-item__dot"></div>
-                  <div className="activity-item__content">
-                    <p className="activity-item__text">{activity.text}</p>
-                    <span className="activity-item__time">{activity.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="dashboard-card__empty">Пока нет событий</p>
-          )}
-          <Link to="/teacher/rag" className="dashboard-card__link">
-            Вся активность →
-          </Link>
-        </div>
-
-        {/* Предстоящие события */}
-        <div className="dashboard-card">
-          <h3 className="dashboard-card__title">📅 Предстоящие события</h3>
-          {isLoadingEvents ? (
-            <p>Загрузка...</p>
-          ) : events && events.length > 0 ? (
-            <div className="events-list">
-              {events.map((event) => (
-                <div key={event.id} className="event-item">
-                  <div className="event-item__date">
-                    <div className="event-item__day">{event.date}</div>
-                    <div className="event-item__time">{event.time}</div>
-                  </div>
-                  <div className="event-item__title">{event.title}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="dashboard-card__empty">Нет предстоящих событий</p>
-          )}
-          <button className="dashboard-card__link">Добавить событие →</button>
-        </div>
-      </div>
-
       {/* Топ студенты */}
       <div className="dashboard-card dashboard-card--full">
-        <h3 className="dashboard-card__title">🏆 Топ студенты этого месяца</h3>
+        <h3 className="dashboard-card__title">  Топ студенты этого месяца</h3>
         {isLoadingTopStudents ? (
           <p>Загрузка...</p>
         ) : topStudents && topStudents.length > 0 ? (
@@ -239,51 +172,6 @@ const TeacherDashboardPage = () => {
         <Link to="/teacher/students" className="dashboard-card__link">
           Все студенты →
         </Link>
-      </div>
-
-      <div className="teacher-dashboard__actions-creative">
-        <h2 className="teacher-dashboard__actions-title">
-          Быстрый доступ
-          <span className="teacher-dashboard__actions-decoration"></span>
-        </h2>
-
-        <div className="quick-actions-creative">
-          <Link to="/teacher/classes" className="quick-action-creative quick-action-creative--primary">
-            <div className="quick-action-creative__number">01</div>
-            <div className="quick-action-creative__content">
-              <h3 className="quick-action-creative__title">Управление классами</h3>
-              <p className="quick-action-creative__desc">Создавайте и организуйте группы</p>
-            </div>
-            <div className="quick-action-creative__arrow">→</div>
-          </Link>
-
-          <Link to="/teacher/invitations" className="quick-action-creative">
-            <div className="quick-action-creative__number">02</div>
-            <div className="quick-action-creative__content">
-              <h3 className="quick-action-creative__title">Приглашения</h3>
-              <p className="quick-action-creative__desc">Добавьте новых студентов</p>
-            </div>
-            <div className="quick-action-creative__arrow">→</div>
-          </Link>
-
-          <Link to="/teacher/topics" className="quick-action-creative">
-            <div className="quick-action-creative__number">03</div>
-            <div className="quick-action-creative__content">
-              <h3 className="quick-action-creative__title">Темы</h3>
-              <p className="quick-action-creative__desc">Создайте учебный материал</p>
-            </div>
-            <div className="quick-action-creative__arrow">→</div>
-          </Link>
-
-          <Link to="/teacher/rag" className="quick-action-creative">
-            <div className="quick-action-creative__number">04</div>
-            <div className="quick-action-creative__content">
-              <h3 className="quick-action-creative__title">Аналитика</h3>
-              <p className="quick-action-creative__desc">Отслеживайте прогресс</p>
-            </div>
-            <div className="quick-action-creative__arrow">→</div>
-          </Link>
-        </div>
       </div>
     </section>
   );

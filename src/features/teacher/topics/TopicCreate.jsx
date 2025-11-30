@@ -14,6 +14,7 @@ const TopicCreate = () => {
     questions: [''],
     conspect: '',
     generateConspect: false,
+    lang: 'Russian',
   });
 
   const createMutation = useMutation({
@@ -85,6 +86,7 @@ const TopicCreate = () => {
       questions: validQuestions,
       conspect: form.generateConspect ? undefined : form.conspect.trim() || undefined,
       generateConspect: form.generateConspect,
+      lang: form.lang,
     };
 
     createMutation.mutate(payload);
@@ -147,6 +149,27 @@ const TopicCreate = () => {
               required
               placeholder="Например: Введение в машинное обучение"
             />
+          </label>
+
+          <label className="form__field">
+            <span>Язык</span>
+            <select
+              name="lang"
+              value={form.lang}
+              onChange={handleChange}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                backgroundColor: '#fff',
+                fontSize: '1rem',
+              }}
+            >
+              <option value="Russian">🇷🇺 Русский</option>
+              <option value="English">🇬🇧 English</option>
+              <option value="Kazakh">🇰🇿 Қазақша</option>
+            </select>
           </label>
         </div>
 

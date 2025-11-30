@@ -68,5 +68,6 @@ export const RagRequests = {
     questions: [],
     conspect: '',
     generateConspect: false,
+    lang: 'Russian',
   },
 };

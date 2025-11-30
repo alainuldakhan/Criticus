@@ -6,5 +6,6 @@ export { invitationsApi } from './invitations';
 export { ragTeacherApi } from './ragTeacher';
 export { ragStudentApi } from './ragStudent';
 export { dashboardApi } from './dashboard';
+export { homeApi } from './home';
 export * from './me';
 export * from './types';

@@ -1,36 +1,23 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { classesApi } from '../../../api/classes';
+import { useClasses, useCreateClass } from '../../../hooks/useClasses';
+import { useForm } from '../../../hooks/useForm';
+import { formDefaults } from '../../../constants/formDefaults';
+import { routes } from '../../../constants/routes';
+import { classService } from '../../../services/classService';
 import Alert from '../../../components/ui/Alert';
 
-const defaultFormState = {
-  name: '',
-  grade: '',
-  year: '',
-};
-
 const ClassList = () => {
-  const queryClient = useQueryClient();
-  const [form, setForm] = useState(defaultFormState);
   const [feedback, setFeedback] = useState(null);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['teacher', 'classes'],
-    queryFn: classesApi.list,
-  });
+  // Fetch classes with business logic
+  const { classes, groupedClasses, stats, isLoading, isError, error, isEmpty } = useClasses();
 
-  const createMutation = useMutation({
-    mutationFn: classesApi.create,
+  // Create class mutation
+  const createMutation = useCreateClass({
     onSuccess: () => {
       setFeedback({ tone: 'success', message: 'Класс успешно создан.' });
-      setForm(defaultFormState);
-      queryClient.invalidateQueries({ queryKey: ['teacher', 'classes'] });
+      resetForm();
     },
     onError: (err) => {
       const message = err?.response?.data?.error || err.message || 'Не удалось создать класс.';
@@ -38,46 +25,19 @@ const ClassList = () => {
     },
   });
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (!form.name.trim()) {
-      setFeedback({ tone: 'error', message: 'Название класса обязательно.' });
-      return;
+  // Form management
+  const { values: form, handleChange, handleSubmit, resetForm } = useForm(
+    formDefaults.class,
+    async (formData) => {
+      const validation = classService.validateClassForm(formData);
+      if (!validation.isValid) {
+        const firstError = Object.values(validation.errors)[0];
+        setFeedback({ tone: 'error', message: firstError });
+        return;
+      }
+      await createMutation.mutateAsync(formData);
     }
-
-    createMutation.mutate({
-      name: form.name.trim(),
-      grade: form.grade ? Number.parseInt(form.grade, 10) : undefined,
-      year: form.year ? Number.parseInt(form.year, 10) : undefined,
-    });
-  };
-
-  const classes = data ?? [];
-  const emptyState = !isLoading && classes.length === 0;
-
-  const groupedByYear = useMemo(() => {
-    const groups = new Map();
-    classes.forEach((klass) => {
-      const key = klass.year ?? 'No year';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(klass);
-    });
-    return Array.from(groups.entries()).sort((a, b) => {
-      if (a[0] === 'No year') return 1;
-      if (b[0] === 'No year') return -1;
-      return Number(b[0]) - Number(a[0]);
-    });
-  }, [classes]);
-
-  // Вычисляем статистику
-  const totalClasses = classes.length;
-  const totalStudents = classes.reduce((sum, klass) => sum + (klass.studentCount ?? 0), 0);
-  const avgClassSize = totalClasses > 0 ? Math.round(totalStudents / totalClasses) : 0;
+  );
 
   return (
     <div className="panel panel--glass">
@@ -94,7 +54,7 @@ const ClassList = () => {
           <div className="stat-card-compact">
             <span className="stat-card-compact__icon">🏫</span>
             <div className="stat-card-compact__info">
-              <div className="stat-card-compact__value">{totalClasses}</div>
+              <div className="stat-card-compact__value">{stats.totalClasses}</div>
               <div className="stat-card-compact__label">Всего классов</div>
             </div>
           </div>
@@ -160,7 +120,7 @@ const ClassList = () => {
           {isLoading && <p>Загрузка классов…</p>}
           {isError && <Alert tone="error">{error?.message || 'Не удалось загрузить классы.'}</Alert>}
 
-          {emptyState && (
+          {isEmpty && (
             <div className="empty-state">
               <div className="empty-state__icon">📚</div>
               <p className="empty-state__text">Классов пока нет</p>
@@ -170,10 +130,10 @@ const ClassList = () => {
 
           {!isLoading && !isError && classes.length > 0 && (
             <div className="classes-container">
-              {groupedByYear.map(([year, items]) => (
+              {groupedClasses.map(([year, items]) => (
                 <div key={year} className="classes-year-group">
                   <div className="classes-year-label">
-                    {year === 'No year' ? 'Год не указан' : `Учебный год: ${year}`}
+                    {classService.getYearLabel(year)}
                   </div>
                   <div className="classes-grid">
                     {items.map((klass) => (
@@ -192,7 +152,7 @@ const ClassList = () => {
                           <div className="class-card__stat">
                             <span className="class-card__stat-icon">👥</span>
                             <span className="class-card__stat-value">
-                              {klass.studentCount ?? 0} студентов
+                              {classService.formatStudentCount(klass.studentCount ?? 0)}
                             </span>
                           </div>
                           {klass.year && (
@@ -205,7 +165,7 @@ const ClassList = () => {
 
                         <div className="class-card__footer">
                           <Link
-                            to={`/teacher/classes/${klass.id}`}
+                            to={routes.teacher.classDetail(klass.id)}
                             className="class-card__link"
                           >
                             Подробнее →
